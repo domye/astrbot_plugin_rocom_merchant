@@ -85,17 +85,32 @@ class RocomMerchantPlugin(Star):
         next_day = current + timedelta(days=1)
         return self._get_push_times(next_day)[0]
 
-    async def _fetch_merchant_data(self) -> Optional[Dict[str, Any]]:
-        try:
-            client = await self._get_client()
-            resp = await client.get(f"{API_URL}?t={int(datetime.now().timestamp())}")
-            if resp.status_code != 200:
-                logger.warning(f"[RocomMerchant] API 返回状态码: {resp.status_code}")
+    async def _fetch_merchant_data(self, max_retries: int = 3, retry_delay: float = 1.0) -> Optional[Dict[str, Any]]:
+        for attempt in range(max_retries):
+            try:
+                client = await self._get_client()
+                resp = await client.get(f"{API_URL}?t={int(datetime.now().timestamp())}")
+                if resp.status_code != 200:
+                    logger.warning(f"[RocomMerchant] API 返回状态码: {resp.status_code}, 尝试 {attempt + 1}/{max_retries}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay)
+                        continue
+                    return None
+                data = resp.json()
+                if data.get("success"):
+                    return data
+                logger.warning(f"[RocomMerchant] API 返回失败: {data.get('error', '未知')}, 尝试 {attempt + 1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay)
+                    continue
                 return None
-            return resp.json()
-        except Exception as e:
-            logger.error(f"[RocomMerchant] 获取商人数据失败: {e}")
-            return None
+            except Exception as e:
+                logger.error(f"[RocomMerchant] 获取商人数据失败: {e}, 尝试 {attempt + 1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                return None
+        return None
 
     def _format_items(self, items: List[str]) -> str:
         if not items:
@@ -154,7 +169,7 @@ class RocomMerchantPlugin(Star):
 
                 chain = MessageChain()
                 chain.message(
-                    f"【远行商人】{round_info.get('date', '')} {round_info.get('current', '')}\n"
+                    f"【远行商人】{round_info.get('current', '')}\n"
                     f"当前商品: {self._format_items(items)}"
                 )
 
@@ -177,20 +192,11 @@ class RocomMerchantPlugin(Star):
             yield event.plain_result("获取商人数据失败，请稍后重试")
             return
 
-        if not data.get("success"):
-            yield event.plain_result(f"查询失败: {data.get('error', '未知错误')}")
-            return
-
         items = data.get("items", [])
         round_info = data.get("roundInfo", {})
-        target_items = data.get("targetItems", [])
 
-        msg = f"【远行商人】\n"
-        msg += f"日期: {round_info.get('date', '-')}\n"
-        msg += f"时段: {round_info.get('current', '-')}\n"
-        msg += f"当前商品: {self._format_items(items)}\n"
-        if target_items:
-            msg += f"热门商品: {self._format_items(target_items)}"
+        msg = f"【远行商人】{round_info.get('current', '-')}\n"
+        msg += f"当前商品: {self._format_items(items)}"
 
         yield event.plain_result(msg)
 
