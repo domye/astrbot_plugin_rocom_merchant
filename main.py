@@ -176,7 +176,7 @@ class RocomMerchantPlugin(Star):
                 if matched_users:
                     chain.message("\n\n订阅提醒:")
                     for user_id, matched_items in matched_users.items():
-                        chain.at(user_id)
+                        chain.chain.append(At(qq=str(user_id)))
                         chain.message(f" 命中: {self._format_items(matched_items)}")
 
                 await self.context.send_message(session_id, chain)
