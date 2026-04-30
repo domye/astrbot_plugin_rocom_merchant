@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional
 from astrbot.api import logger
 from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api.star import Context, Star, register, StarTools
-from astrbot.core.message.components import Plain, At
+import astrbot.api.message_components as Comp
 
 from .core.subscription import SubscriptionManager
 
@@ -167,19 +167,20 @@ class RocomMerchantPlugin(Star):
                     if matched:
                         matched_users[user_id] = matched
 
-                chain = MessageChain()
-                chain.message(
-                    f"【远行商人】{round_info.get('current', '')}\n"
-                    f"当前商品: {self._format_items(items)}"
-                )
+                chain = [
+                    Comp.Plain(
+                        f"【远行商人】{round_info.get('current', '')}\n"
+                        f"当前商品: {self._format_items(items)}"
+                    )
+                ]
 
                 if matched_users:
-                    chain.message("\n\n订阅提醒:")
+                    chain.append(Comp.Plain("\n\n订阅提醒:"))
                     for user_id, matched_items in matched_users.items():
-                        chain.chain.append(At(qq=str(user_id)))
-                        chain.message(f" 命中: {self._format_items(matched_items)}")
+                        chain.append(Comp.At(qq=str(user_id)))
+                        chain.append(Comp.Plain(f" 命中: {self._format_items(matched_items)}"))
 
-                await self.context.send_message(session_id, chain)
+                await self.context.send_message(session_id, MessageChain(chain))
                 logger.info(f"[RocomMerchant] 已推送到 {session_id}")
             except Exception as e:
                 logger.error(f"[RocomMerchant] 推送到 {session_id} 失败: {e}")
