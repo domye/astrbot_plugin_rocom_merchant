@@ -1,3 +1,1 @@
-from .main import RocomAssistantPlugin
-
-__all__ = ["RocomAssistantPlugin"]
+# astrbot_plugin_rocom_assistant
