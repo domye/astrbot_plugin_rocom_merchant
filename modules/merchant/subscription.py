@@ -4,7 +4,7 @@
 
 import copy
 from typing import Dict, Any, Optional, List
-from core.data_manager import DataManager
+from ...core.data_manager import DataManager
 
 
 class MerchantSubscriptionManager(DataManager):

@@ -9,8 +9,8 @@ from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent
 import astrbot.api.message_components as Comp
 
-from core.base import BaseModule
-from core.utils import check_admin
+from ..core.base import BaseModule
+from ..core.utils import check_admin
 from .api import MerchantApi
 from .subscription import MerchantSubscriptionManager
 

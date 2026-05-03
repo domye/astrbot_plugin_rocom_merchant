@@ -11,8 +11,8 @@ from astrbot.api import logger
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register, StarTools
 
-from core import BaseModule, Scheduler
-from modules import MerchantModule
+from .core import BaseModule, Scheduler
+from .modules import MerchantModule
 
 
 ENABLED_MODULES: List[Type[BaseModule]] = [

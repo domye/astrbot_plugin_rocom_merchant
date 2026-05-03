@@ -5,7 +5,7 @@
 from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent
 
-from core.base import BaseModule
+from ..core.base import BaseModule
 
 
 class ActivityModule(BaseModule):
