@@ -64,6 +64,10 @@ class HomeSubscriptionManager:
         subs = await self._get_subs()
         return [s for s in subs.values() if s.get("polling")]
     
+    async def get_all_subscriptions(self) -> List[Dict[str, Any]]:
+        subs = await self._get_subs()
+        return list(subs.values())
+    
     async def set_polling(self, session_id: str, user_id: str, polling: bool):
         key = self._key(session_id, user_id)
         subs = await self._get_subs()

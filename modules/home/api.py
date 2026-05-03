@@ -38,16 +38,17 @@ class HomeApi:
                 if resp.status == 200:
                     data = await resp.json()
                     if data.get("code") == 0:
-                        return data.get("data", {}).get("home_info")
+                        return data.get("data")
                 logger.warning(f"[HomeApi] 获取家园信息失败: status={resp.status}")
                 return None
         except Exception as e:
             logger.error(f"[HomeApi] 请求异常: {e}")
             return None
     
-    def extract_plants(self, home_info: Dict[str, Any]) -> list:
+    def extract_plants(self, data: Dict[str, Any]) -> list:
         plants = []
         try:
+            home_info = data.get("home_info", {})
             brief = home_info.get("friend_cell_home_brief_info", {})
             plant_info = brief.get("home_plant_info", {})
             land_list = plant_info.get("home_plant_land_list", [])
@@ -61,3 +62,24 @@ class HomeApi:
             logger.error(f"[HomeApi] 解析植物数据失败: {e}")
         
         return plants
+    
+    def extract_pets(self, data: Dict[str, Any]) -> list:
+        pets = []
+        try:
+            home_info = data.get("home_info", {})
+            brief = home_info.get("friend_cell_home_brief_info", {})
+            home_pets = brief.get("home_pets", [])
+            for pet in home_pets:
+                pet_info = pet.get("home_pet_info", {})
+                display_info = pet.get("display_info", {})
+                pets.append({
+                    "pet_gid": pet_info.get("pet_gid"),
+                    "pet_cfg_id": pet_info.get("pet_cfg_id"),
+                    "name": display_info.get("name") or pet_info.get("name", ""),
+                    "level": display_info.get("level", 0),
+                    "have_egg": pet.get("have_egg", False)
+                })
+        except Exception as e:
+            logger.error(f"[HomeApi] 解析宠物数据失败: {e}")
+        
+        return pets
