@@ -10,12 +10,17 @@ API_BASE = "https://wegame.shallow.ink"
 
 
 class HomeApi:
+<<<<<<< HEAD
     def __init__(self, api_key: str = ""):
         self._session: Optional[aiohttp.ClientSession] = None
         self._api_key = api_key
     
     def set_api_key(self, api_key: str):
         self._api_key = api_key
+=======
+    def __init__(self):
+        self._session: Optional[aiohttp.ClientSession] = None
+>>>>>>> 5b085d429ac46691375aa8016f46ee9e8bbf850b
     
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
