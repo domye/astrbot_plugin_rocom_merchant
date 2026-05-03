@@ -1,0 +1,8 @@
+{
+  "api_key": {
+    "description": "WeGame API Key",
+    "type": "string",
+    "hint": "全局API Key，需要game:rocom权限",
+    "obvious_hint": true
+  }
+}

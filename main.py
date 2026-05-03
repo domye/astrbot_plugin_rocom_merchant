@@ -12,10 +12,12 @@ from astrbot.api.star import Context, Star, register, StarTools
 from .core.base import BaseModule
 from .core.scheduler import Scheduler
 from .modules.merchant.module import MerchantModule
+from .modules.home.module import HomeModule
 
 
 ENABLED_MODULES: List[Type[BaseModule]] = [
     MerchantModule,
+    HomeModule,
 ]
 
 
@@ -38,7 +40,9 @@ class RocomAssistantPlugin(Star):
         
         for module_cls in ENABLED_MODULES:
             try:
-                module = module_cls(context, data_dir, self.config.get(module_cls.name, {}))
+                module_config = self.config.get(module_cls.name, {})
+                module_config["api_key"] = self.config.get("api_key", "")
+                module = module_cls(context, data_dir, module_config)
                 self.modules.append(module)
                 logger.info(f"[RocomAssistant] 加载模块: {module.name}")
             except Exception as e:
@@ -122,6 +126,27 @@ class RocomAssistantPlugin(Star):
     @filter.command("商人订阅清空")
     async def cmd_sub_clear(self, event: AstrMessageEvent):
         handler = self._command_handlers.get("商人订阅清空")
+        if handler:
+            async for result in handler(event):
+                yield result
+    
+    @filter.command("家园订阅")
+    async def cmd_home_sub(self, event: AstrMessageEvent, uid: str = ""):
+        handler = self._command_handlers.get("家园订阅")
+        if handler:
+            async for result in handler(event, uid):
+                yield result
+    
+    @filter.command("家园取消")
+    async def cmd_home_unsub(self, event: AstrMessageEvent):
+        handler = self._command_handlers.get("家园取消")
+        if handler:
+            async for result in handler(event):
+                yield result
+    
+    @filter.command("家园状态")
+    async def cmd_home_status(self, event: AstrMessageEvent):
+        handler = self._command_handlers.get("家园状态")
         if handler:
             async for result in handler(event):
                 yield result
