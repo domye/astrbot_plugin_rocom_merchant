@@ -38,11 +38,7 @@ class RocomAssistantPlugin(Star):
         
         for module_cls in ENABLED_MODULES:
             try:
-<<<<<<< HEAD
                 module = module_cls(context, data_dir, self.config.get(module_cls.name, {}))
-=======
-                module = module_cls(context, data_dir, config.get(module_cls.name, {}))
->>>>>>> b5e0fcfd1658a53b08a0f2f7ec0b4a9bf2571604
                 self.modules.append(module)
                 logger.info(f"[RocomAssistant] 加载模块: {module.name}")
             except Exception as e:
