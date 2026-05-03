@@ -1,1 +1,3 @@
-from .main import RocomMerchantPlugin
+from .main import RocomAssistantPlugin
+
+__all__ = ["RocomAssistantPlugin"]
