@@ -1,6 +1,6 @@
-name: astrbot_plugin_rocom_merchant
-display_name: 洛克王国远行商人查询
-desc: 基于roco.dayun.cool API的远行商人查询插件，支持定时推送和商品订阅提醒
-version: "1.0.0"
+name: astrbot_plugin_rocom_assistant
+display_name: 洛克王国助手
+desc: 洛克王国多功能助手插件，支持远行商人查询、定时推送等功能
+version: "2.0.0"
 author: domye
-repo: https://github.com/domye/astrbot_plugin_rocom_merchant
+repo: https://github.com/domye/astrbot_plugin_rocom_assistant
