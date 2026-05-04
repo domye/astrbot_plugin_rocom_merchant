@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta, timezone
 
 from astrbot.api import logger
-from astrbot.api.event import AstrMessageEvent
+from astrbot.api.event import AstrMessageEvent, MessageChain
 import astrbot.api.message_components as Comp
 
 from ...core.base import BaseModule
@@ -142,9 +142,10 @@ class MerchantModule(BaseModule):
         )
     
     async def _do_push(self):
+        logger.info("[MerchantModule] 开始执行定时推送...")
         enabled_groups = await self.subscription.get_all_enabled()
         if not enabled_groups:
-            logger.debug("[MerchantModule] 没有开启订阅的群")
+            logger.info("[MerchantModule] 没有开启订阅的群")
             return
         
         data = await self.api.fetch_data()
@@ -154,6 +155,7 @@ class MerchantModule(BaseModule):
         
         items = data.get("items", [])
         round_info = data.get("roundInfo", {})
+        logger.info(f"[MerchantModule] 商人数据: {round_info.get('current')}, 商品: {items}")
         
         for session_id, group_data in enabled_groups.items():
             try:
@@ -165,18 +167,13 @@ class MerchantModule(BaseModule):
                     if matched:
                         matched_users[user_id] = matched
                 
-                chain = [
-                    Comp.Plain(
-                        f"【远行商人】{round_info.get('current', '')}\n"
-                        f"当前商品: {self._format_items(items)}"
-                    )
-                ]
+                chain = MessageChain()
+                chain.message(f"【远行商人】{round_info.get('current', '')}\n当前商品: {self._format_items(items)}")
                 
                 if matched_users:
-                    chain.append(Comp.Plain("\n\n订阅提醒:"))
+                    chain.message("\n\n订阅提醒:")
                     for user_id, matched_items in matched_users.items():
-                        chain.append(Comp.At(qq=str(user_id)))
-                        chain.append(Comp.Plain(f" 命中: {self._format_items(matched_items)}"))
+                        chain.at(qq=str(user_id)).message(f" 命中: {self._format_items(matched_items)}")
                 
                 await self.context.send_message(session_id, chain)
                 logger.info(f"[MerchantModule] 已推送到 {session_id}")

@@ -9,10 +9,10 @@ from astrbot.api.event import AstrMessageEvent
 
 
 async def check_admin(event: AstrMessageEvent) -> bool:
+    if event.is_private_chat():
+        return True
     if event.is_admin():
         return True
-    if event.is_private_chat():
-        return False
     
     sender_id = str(event.get_sender_id())
     role = str(getattr(event, "role", "") or "").lower()

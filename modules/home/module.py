@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Set
 from datetime import datetime, timezone, timedelta
 
 from astrbot.api import logger
-from astrbot.api.event import AstrMessageEvent
+from astrbot.api.event import AstrMessageEvent, MessageChain
 import astrbot.api.message_components as Comp
 
 from ...core.base import BaseModule
@@ -347,10 +347,8 @@ class HomeModule(BaseModule):
         self._tracked_eggs[key] = current_eggs
     
     async def _notify_plant(self, session_id: str, user_id: str, uid: str, ripe_count: int, growing_count: int):
-        chain = [
-            Comp.At(qq=str(user_id)),
-            Comp.Plain(f" 你的家园({uid})作物已成熟!\n种植园: 成熟: {ripe_count}株, 生长中: {growing_count}株")
-        ]
+        chain = MessageChain()
+        chain.at(qq=str(user_id)).message(f" 你的家园({uid})作物已成熟!\n种植园: 成熟: {ripe_count}株, 生长中: {growing_count}株")
         
         try:
             await self.context.send_message(session_id, chain)
@@ -364,10 +362,8 @@ class HomeModule(BaseModule):
         else:
             msg = f" 你的家园({uid})有精灵蛋待收取!\n室内: {', '.join(egg_names)}"
         
-        chain = [
-            Comp.At(qq=str(user_id)),
-            Comp.Plain(msg)
-        ]
+        chain = MessageChain()
+        chain.at(qq=str(user_id)).message(msg)
         
         try:
             await self.context.send_message(session_id, chain)
