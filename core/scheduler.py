@@ -9,6 +9,8 @@ from astrbot.api import logger
 
 
 class Scheduler:
+    _class_instance = None  # 类级别变量，不会被模块重载重置
+
     def __init__(self):
         self._tasks: List[Tuple[str, List[str], Callable]] = []
         self._running = False
@@ -98,13 +100,31 @@ class Scheduler:
                 await asyncio.sleep(60)
     
     def start(self):
+        global _global_scheduler_running, _global_scheduler_instance
+
+        # 检查自身是否已运行
         if self._running:
+            logger.debug("[Scheduler] 当前实例已运行")
             return
+
+        # 停止旧的实例（如果存在且不是自己）
+        if _global_scheduler_instance and _global_scheduler_instance != self:
+            old_instance = _global_scheduler_instance
+            logger.info(f"[Scheduler] 停止旧的 scheduler 实例 (running={old_instance._running})")
+            old_instance._running = False
+            if old_instance._task and not old_instance._task.done():
+                old_instance._task.cancel()
+            _global_scheduler_running = False
+
         self._running = True
+        _global_scheduler_running = True
+        _global_scheduler_instance = self
         self._task = asyncio.create_task(self._loop())
-        logger.info("[Scheduler] 调度器已启动")
-    
+        logger.info(f"[Scheduler] 调度器已启动 (任务数: {len(self._tasks)})")
+
     async def stop(self):
+        global _global_scheduler_running, _global_scheduler_instance
+
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
@@ -112,4 +132,9 @@ class Scheduler:
                 await self._task
             except asyncio.CancelledError:
                 pass
+
+        if _global_scheduler_instance == self:
+            _global_scheduler_running = False
+            _global_scheduler_instance = None
+
         logger.info("[Scheduler] 调度器已停止")
