@@ -7,6 +7,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Callable, Awaitable, List, Tuple, Set
 from astrbot.api import logger
 
+# 全局变量：防止多个 Scheduler 同时运行
+_global_scheduler_running = False
+_global_scheduler_instance = None
+
 
 class Scheduler:
     def __init__(self):
@@ -98,13 +102,28 @@ class Scheduler:
                 await asyncio.sleep(60)
     
     def start(self):
+        global _global_scheduler_running, _global_scheduler_instance
+
+        # 停止旧的实例（如果存在）
+        if _global_scheduler_instance and _global_scheduler_instance != self:
+            logger.info("[Scheduler] 停止旧的 scheduler 实例")
+            _global_scheduler_instance._running = False
+            if _global_scheduler_instance._task and not _global_scheduler_instance._task.done():
+                _global_scheduler_instance._task.cancel()
+            _global_scheduler_running = False
+
         if self._running:
             return
+
         self._running = True
+        _global_scheduler_running = True
+        _global_scheduler_instance = self
         self._task = asyncio.create_task(self._loop())
         logger.info("[Scheduler] 调度器已启动")
-    
+
     async def stop(self):
+        global _global_scheduler_running, _global_scheduler_instance
+
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
@@ -112,4 +131,9 @@ class Scheduler:
                 await self._task
             except asyncio.CancelledError:
                 pass
+
+        if _global_scheduler_instance == self:
+            _global_scheduler_running = False
+            _global_scheduler_instance = None
+
         logger.info("[Scheduler] 调度器已停止")
